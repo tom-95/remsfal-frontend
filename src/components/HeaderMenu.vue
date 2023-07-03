@@ -53,6 +53,11 @@ export default {
               label: 'Meine Kontakte',
               icon: 'pi pi-fw pi-users',
               to: {name: 'AccountContacts'}
+            },
+            {
+              label: 'Zahlungen',
+              icon: 'pi pi-fw pi-home',
+              to: {name: 'Payments'}
             }
           ]
         },

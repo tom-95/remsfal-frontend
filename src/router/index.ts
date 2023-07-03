@@ -37,6 +37,13 @@ const router = createRouter({
       // route level code-splitting
       // which is lazy-loaded when the route is visited.
       component: () => import('@/views/AccountContactsView.vue')
+    },
+    {
+      path: '/payments',
+      name: 'Payments',
+      // route level code-splitting
+      // which is lazy-loaded when the route is visited.
+      component: () => import('@/views/PaymentsView.vue')
     }
   ]
 })
