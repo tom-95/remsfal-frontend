@@ -1,51 +1,47 @@
 <script lang="ts">
 import axios from 'axios'
-import BlockchainService  from "@/services/BlockchainService";
-//import AuthenticationService  from "@/services/AuthenticationService";
 
 export default {
+  
   data() {
     return {
       amountField: '',
-      senderField: '',
       receiverField: '',
+      purposeField: '',
       payments: []
     }
   },
-  blockchainService: null,
+
   created() {
-    console.log("payments")
-    //this.blockchainService = new BlockchainService();
-    //this.senderField = AuthenticationService.getInstance().getUserEmail();
-    this.getAllPayments();
-    //console.log(this.payments);
+    console.info("payments")
+    this.getAllPayments()
   },
+
   methods: {
+
       executePayment() {
-          //this.blockchainService.createAsset(this.amountField, this.purposeField);
-          //this.getAllPayments();
-          const data = {"sender": "Tom", "receiver": this.receiverField, "amount": this.amountField}
+
+          const data = {"sender": "Tom", "receiver": this.receiverField, "purpose": this.purposeField, "amount": this.amountField}
           axios.post('http://localhost:8080/api/transaction', data)
           .then((response) => {
           this.receiverField = ''
           this.amountField = ''
+          this.purposeField = ''
           this.getAllPayments()
-          // eslint-disable-next-line node/handle-callback-err
         }, (error) => {
           console.log('Could not send transaction!')
         })
       },
+
       getAllPayments() {
-          //const blockchain = this.blockchainservice.getPayments();
-          //var blockchain = null
+
           axios.get('http://localhost:8080/api/blockchain')
-          .then(response => (this.payments=response.data), 
+          .then((response) => {
+            this.payments=response.data
+          }, 
           (error) => {
-          console.log('Could not receive transactions!')
+          console.log('Could not receive payments!')
         })
-          //blockchain.forEach(function(block) {
-          //    this.payments.push(block)
-          //});
       }
 
   }
@@ -59,15 +55,18 @@ export default {
     <div>
       <h1>You can create a new payment and view existing payments.</h1>
       <p><input v-model="receiverField" placeholder="Enter receiver">
+      <input v-model="purposeField" placeholder="Enter purpose of use">
       <input v-model="amountField" placeholder="Enter amount in €"></p>
       <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/>
     </div>
     <div>
       <table>
           <tbody>
-          <tr v-for="payment in payments" :key="payment.id">
-            <td>{{payment.transactions[0].receiver}}</td>
-            <td>{{payment.transactions[0].amount}}</td>
+          <tr v-for="payment in payments" :key="payment.ID">
+            <td>{{payment.Sender}}</td>
+            <td>{{payment.Receiver}}</td>
+            <td>{{payment.Purpose}}</td>
+            <td>{{payment.Amount}}</td>
           </tr>
           </tbody>
         </table>
