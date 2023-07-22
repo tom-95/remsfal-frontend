@@ -7,41 +7,52 @@ export default {
     return {
       amountField: '',
       receiverField: '',
-      purposeField: '',
-      payments: []
+      balances: []
     }
   },
 
   created() {
     console.info("payments")
-    this.getAllPayments()
+    this.getAllBalances()
   },
 
   methods: {
 
       executePayment() {
 
-          const data = {"sender": "Tom", "receiver": this.receiverField, "purpose": this.purposeField, "amount": this.amountField}
-          axios.post('http://localhost:8080/api/transaction', data)
+          const data = {"sender": "Tom", "receiver": this.receiverField, "amount": this.amountField}
+          axios.post('http://localhost:8080/api/hyperledger/transaction', data)
           .then((response) => {
           this.receiverField = ''
           this.amountField = ''
-          this.purposeField = ''
-          this.getAllPayments()
+          this.getAllBalances()
         }, (error) => {
           console.log('Could not send transaction!')
         })
       },
 
-      getAllPayments() {
+      getAllBalances() {
 
-          axios.get('http://localhost:8080/api/blockchain')
+          axios.get('http://localhost:8080/api/hyperledger/history')
           .then((response) => {
-            this.payments=response.data
+            this.balances=response.data
           }, 
           (error) => {
-          console.log('Could not receive payments!')
+          console.log('Could not receive balances!')
         })
+      },
+
+      getDate(timestamp) {
+        const seconds = timestamp.seconds;
+        const nanoseconds = timestamp.nanos;
+
+        const milliseconds = seconds * 1000 + nanoseconds / 1000000;
+
+        const date = new Date(milliseconds);
+
+        const formattedDate = date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes();
+        
+        return formattedDate
       }
 
   }
@@ -53,20 +64,17 @@ export default {
     <br>
     <br>
     <div>
-      <h1>You can create a new payment and view existing payments.</h1>
-      <p><input v-model="receiverField" placeholder="Enter receiver">
-      <input v-model="purposeField" placeholder="Enter purpose of use">
-      <input v-model="amountField" placeholder="Enter amount in €"></p>
+      <h1>Du kannst eine neue Zahlung durchführen und den Verlauf des Kontostandes ansehen.</h1>
+      <p><input v-model="receiverField" placeholder="Empfänger">
+      <input v-model="amountField" placeholder="Betrag in €"></p>
       <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/>
     </div>
     <div>
       <table>
           <tbody>
-          <tr v-for="payment in payments" :key="payment.ID">
-            <td>{{payment.Sender}}</td>
-            <td>{{payment.Receiver}}</td>
-            <td>{{payment.Purpose}}</td>
-            <td>{{payment.Amount}}</td>
+          <tr v-for="balance in balances" :key="balance.TxId">
+            <td>{{getDate(balance.Timestamp)}}</td>
+            <td>{{balance.Value.Balance}}</td>
           </tr>
           </tbody>
         </table>
