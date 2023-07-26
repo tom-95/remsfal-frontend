@@ -1,13 +1,18 @@
 <script lang="ts">
 import axios from 'axios'
+import LineChart from '@/components/LineChart.vue'
 
 export default {
-  
+  components: { LineChart },
   data() {
     return {
       amountField: '',
       receiverField: '',
-      balances: []
+      balances: [],
+      chartData: {
+        labels: [],
+        datasets: [ { data: [] } ]
+      },
     }
   },
 
@@ -33,16 +38,20 @@ export default {
 
       getAllBalances() {
 
-          axios.get('http://localhost:8080/api/hyperledger/history')
+          axios.get('http://localhost:8080/api/hyperledger/history/tom')
           .then((response) => {
-            this.balances=response.data
+            //this.balances=response.data
+            for (const entry of response.data) {
+              this.chartData.labels.unshift(this.formatDate(entry.Timestamp))
+              this.chartData.datasets[0].data.unshift(entry.Value.Balance)
+            }
           }, 
           (error) => {
           console.log('Could not receive balances!')
         })
       },
 
-      getDate(timestamp) {
+      formatDate(timestamp) {
         const seconds = timestamp.seconds;
         const nanoseconds = timestamp.nanos;
 
@@ -70,14 +79,8 @@ export default {
       <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/>
     </div>
     <div>
-      <table>
-          <tbody>
-          <tr v-for="balance in balances" :key="balance.TxId">
-            <td>{{getDate(balance.Timestamp)}}</td>
-            <td>{{balance.Value.Balance}}</td>
-          </tr>
-          </tbody>
-        </table>
+      <p>Aktueller Kontostand: {{ chartData.datasets[0].data.at(-1) }}€</p>
+      <LineChart v-if="chartData.datasets[0].data.length > 0" :chartData="chartData" />
     </div>
   </main>
 </template>
