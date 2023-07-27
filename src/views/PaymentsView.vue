@@ -8,10 +8,9 @@ export default {
     return {
       amountField: '',
       receiverField: '',
-      balances: [],
       chartData: {
         labels: [],
-        datasets: [ { data: [] } ]
+        datasets: [ { label: 'Kontostand in €', data: [] } ]
       },
     }
   },
@@ -40,7 +39,6 @@ export default {
 
           axios.get('http://localhost:8080/api/hyperledger/history/tom')
           .then((response) => {
-            //this.balances=response.data
             for (const entry of response.data) {
               this.chartData.labels.unshift(this.formatDate(entry.Timestamp))
               this.chartData.datasets[0].data.unshift(entry.Value.Balance)
@@ -73,10 +71,15 @@ export default {
     <br>
     <br>
     <div>
+      <br>
       <h1>Du kannst eine neue Zahlung durchführen und den Verlauf des Kontostandes ansehen.</h1>
+      <br>
       <p><input v-model="receiverField" placeholder="Empfänger">
-      <input v-model="amountField" placeholder="Betrag in €"></p>
-      <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/>
+      <span class="tab"></span>
+      <input v-model="amountField" placeholder="Betrag in €">
+      <span class="tab"></span>
+      <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/></p>
+      <br>
     </div>
     <div>
       <p>Aktueller Kontostand: {{ chartData.datasets[0].data.at(-1) }}€</p>
@@ -93,4 +96,8 @@ export default {
     align-items: center;
   }
 } */
+.tab {
+    display: inline-block;
+    margin-left: 5px;
+}
 </style>
