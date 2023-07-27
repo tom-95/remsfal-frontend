@@ -8,6 +8,8 @@ export default {
     return {
       amountField: '',
       receiverField: '',
+      purposeField: '',
+      payments: [],
       chartData: {
         labels: [],
         datasets: [ { label: 'Kontostand in €', data: [] } ]
@@ -24,11 +26,12 @@ export default {
 
       executePayment() {
 
-          const data = {"sender": "Tom", "receiver": this.receiverField, "amount": this.amountField}
+          const data = {"sender": "Tom", "receiver": this.receiverField, "purpose": this.purposeField, "amount": this.amountField}
           axios.post('http://localhost:8080/api/hyperledger/transaction', data)
           .then((response) => {
           this.receiverField = ''
           this.amountField = ''
+          this.purposeField = ''
           this.getAllBalances()
         }, (error) => {
           console.log('Could not send transaction!')
@@ -37,7 +40,14 @@ export default {
 
       getAllBalances() {
 
-          axios.get('http://localhost:8080/api/hyperledger/history/tom')
+          axios.get('http://localhost:8080/api/hyperledger/transactions')
+          .then((response) => {
+            this.payments=response.data
+          }, 
+          (error) => {
+          console.log('Could not receive payments!')
+        })
+        axios.get('http://localhost:8080/api/hyperledger/history/tom')
           .then((response) => {
             for (const entry of response.data) {
               this.chartData.labels.unshift(this.formatDate(entry.Timestamp))
@@ -60,6 +70,18 @@ export default {
         const formattedDate = date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes();
         
         return formattedDate
+      },
+
+      getDateFromId(id) {
+
+        const milliseconds = parseInt(id.replace("transfer", ""));
+
+        const date = new Date(milliseconds);
+
+        const formattedDate = date.getDate() + '.' + (date.getMonth() + 1) + '.' + date.getFullYear() + ' ' + date.getHours() + ':' + date.getMinutes();
+
+        return formattedDate
+
       }
 
   }
@@ -72,16 +94,38 @@ export default {
     <br>
     <div>
       <br>
-      <h1>Du kannst eine neue Zahlung durchführen und den Verlauf des Kontostandes ansehen.</h1>
-      <br>
+      <h1>Neue Zahlung</h1>
       <p><input v-model="receiverField" placeholder="Empfänger">
       <span class="tab"></span>
       <input v-model="amountField" placeholder="Betrag in €">
       <span class="tab"></span>
+      <input v-model="purposeField" placeholder="Verwendungszweck">
+      <span class="tab"></span>
       <Button @click="executePayment" label="Zahlung durchführen" icon="pi pi-plus" iconPos="left"/></p>
       <br>
+      <h1>Frühere Zahlungen</h1>
     </div>
+    <div class="tabelle">
+      <table>
+          <tbody>
+          <tr v-for="payment in payments" :key="payment.ID">
+            <td>{{this.getDateFromId(payment.ID)}}</td>
+            <span class="tab"></span>
+            <td>Sender: {{payment.Sender}}</td>
+            <span class="tab"></span>
+            <td>Empfänger: {{payment.Receiver}}</td>
+            <span class="tab"></span>
+            <td>Verwendungszweck: {{payment.Purpose}}</td>
+            <span class="tab"></span>
+            <td>Betrag: {{payment.Amount}}€</td>
+          </tr>
+          </tbody>
+        </table>
+        <br>
+      </div>
     <div>
+      <br>
+      <h1>Kontostand</h1>
       <p>Aktueller Kontostand: {{ chartData.datasets[0].data.at(-1) }}€</p>
       <LineChart v-if="chartData.datasets[0].data.length > 0" :chartData="chartData" />
     </div>
@@ -96,6 +140,11 @@ export default {
     align-items: center;
   }
 } */
+.tabelle {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 .tab {
     display: inline-block;
     margin-left: 5px;
